@@ -9,6 +9,7 @@ export interface Ticket {
   fecha: string;
   status: 'activo' | 'finalizado' | 'anulado';
   metodosPagoHabilitados: string[];
+  finalizadoManualmente?: boolean;
 }
 
 export interface PagoRecibido {

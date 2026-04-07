@@ -41,9 +41,11 @@ import {
   Download,
   ShoppingCart,
   Pencil,
-  Edit
+  Edit,
+  DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { View, Ticket as TicketType, PagoRecibido, MetodoPago, QRCode } from './types';
 
 // --- Mock Data ---
@@ -241,6 +243,70 @@ const LogoPayment = ({ className = "h-[29px]" }: { className?: string }) => (
     </div>
   </div>
 );
+
+const QRLinkModal = ({ 
+  isOpen, 
+  onClose, 
+  ticketId, 
+  onGoToPay, 
+  onCopyLink 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  ticketId: number | null; 
+  onGoToPay: (id: number) => void;
+  onCopyLink: (id: number) => void;
+}) => {
+  if (!isOpen || ticketId === null) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="p-8 flex flex-col items-center">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Link de pago</h3>
+          
+          <div className="bg-white p-4 rounded-2xl border-2 border-gray-50 shadow-inner mb-8">
+            <QRCodeSVG 
+              value={`https://copayex.com/pay/${ticketId}`} 
+              size={200}
+              level="H"
+              includeMargin={false}
+            />
+          </div>
+
+          <div className="w-full space-y-3">
+            <button 
+              onClick={() => onGoToPay(ticketId)}
+              className="w-full py-3 bg-[#1a3a5a] text-white font-bold rounded-xl hover:bg-[#152e48] transition-all flex items-center justify-center gap-2"
+            >
+              Ir a pagar
+            </button>
+            <button 
+              onClick={() => onCopyLink(ticketId)}
+              className="w-full py-3 bg-gray-50 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all border border-gray-200 flex items-center justify-center gap-2"
+            >
+              <Copy size={18} />
+              Copiar link
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const ActionDropdown = ({ 
   options, 
@@ -740,25 +806,53 @@ const PagoPantalla = ({
             </div>
 
             {/* Payment Input Card */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-              <div className="relative flex items-center justify-center mb-4">
-                <span className="absolute left-0 text-xl font-bold text-gray-400">$</span>
-                <input 
-                  type="text"
-                  value={amountToPay === '0' ? '' : amountToPay}
-                  onChange={handleMontoChange}
-                  placeholder="0"
-                  className="w-full text-center text-3xl font-bold text-gray-900 outline-none placeholder:text-gray-200"
-                />
+            {ticket.status === 'finalizado' ? (
+              ticket.finalizadoManualmente ? (
+                <div className="bg-[#fef9c3] rounded-lg p-6 shadow-sm border border-yellow-200 text-center flex flex-col items-center justify-center space-y-4">
+                  <p className="text-yellow-800 font-bold text-lg leading-tight">
+                    Este ticket se encuentra finalizado
+                  </p>
+                  <button 
+                    onClick={onBack}
+                    className="px-4 py-1.5 bg-yellow-800/10 hover:bg-yellow-800/20 text-yellow-800 text-xs font-bold rounded-full transition-all border border-yellow-800/20"
+                  >
+                    volver al sitio
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-[#dcfce7] rounded-lg p-6 shadow-sm border border-green-200 text-center flex flex-col items-center justify-center space-y-4">
+                  <p className="text-green-800 font-bold text-lg leading-tight">
+                    ¡El pago total se completó exitosamente!
+                  </p>
+                  <button 
+                    onClick={onBack}
+                    className="px-4 py-1.5 bg-green-800/10 hover:bg-green-800/20 text-green-800 text-xs font-bold rounded-full transition-all border border-green-800/20"
+                  >
+                    volver al sitio
+                  </button>
+                </div>
+              )
+            ) : (
+              <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                <div className="relative flex items-center justify-center mb-4">
+                  <span className="absolute left-0 text-xl font-bold text-gray-400">$</span>
+                  <input 
+                    type="text"
+                    value={amountToPay === '0' ? '' : amountToPay}
+                    onChange={handleMontoChange}
+                    placeholder="0"
+                    className="w-full text-center text-3xl font-bold text-gray-900 outline-none placeholder:text-gray-200"
+                  />
+                </div>
+                <button 
+                  onClick={() => getNumericAmount(amountToPay) > 0 && setStep('method')}
+                  disabled={getNumericAmount(amountToPay) > restaPagar || getNumericAmount(amountToPay) <= 0}
+                  className="w-full py-3 bg-[#1a3a5a] text-white font-bold rounded-lg hover:bg-[#152e48] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Pagar
+                </button>
               </div>
-              <button 
-                onClick={() => getNumericAmount(amountToPay) > 0 && setStep('method')}
-                disabled={getNumericAmount(amountToPay) > restaPagar || getNumericAmount(amountToPay) <= 0}
-                className="w-full py-3 bg-[#1a3a5a] text-white font-bold rounded-lg hover:bg-[#152e48] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Pagar
-              </button>
-            </div>
+            )}
 
             {/* Activity Card */}
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
@@ -1211,11 +1305,38 @@ export default function App() {
   const [businessLogo, setBusinessLogo] = useState<string | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pagoFilter, setPagoFilter] = useState<'aprobado' | 'reembolsado'>('aprobado');
+
+  // Automatic ticket status update based on payments
+  React.useEffect(() => {
+    setTickets(prevTickets => prevTickets.map(ticket => {
+      const ticketPagos = pagos.filter(p => p.ticketId === ticket.id && p.status !== 'reembolsado');
+      const totalPagado = ticketPagos.reduce((acc, p) => acc + p.monto, 0);
+      const restaPagar = ticket.total - totalPagado;
+
+      let newStatus = ticket.status;
+      if (ticket.status !== 'anulado' && !ticket.finalizadoManualmente) {
+        if (restaPagar <= 0 && ticket.status !== 'finalizado') {
+          newStatus = 'finalizado';
+        } else if (restaPagar > 0 && ticket.status === 'finalizado') {
+          newStatus = 'activo';
+        }
+      }
+
+      // Only return a new object if something actually changed to avoid unnecessary re-renders
+      if (ticket.pagado === totalPagado && ticket.status === newStatus) {
+        return ticket;
+      }
+
+      return { ...ticket, pagado: totalPagado, status: newStatus };
+    }));
+  }, [pagos]);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [configTab, setConfigTab] = useState<'perfil' | 'metodos' | 'integraciones'>('perfil');
+  const [configTab, setConfigTab] = useState<'cuenta' | 'metodos' | 'integraciones'>('cuenta');
   const [selectedMetodo, setSelectedMetodo] = useState<MetodoPago | null>(null);
   const [isCreateIntegrationModalOpen, setIsCreateIntegrationModalOpen] = useState(false);
   const [isCreateWebhookModalOpen, setIsCreateWebhookModalOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrModalTicketId, setQrModalTicketId] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; action?: { label: string; onClick: () => void } } | null>(null);
   const profileMenuRef = React.useRef<HTMLDivElement>(null);
 
@@ -1265,20 +1386,12 @@ export default function App() {
 
   const handleTicketAction = (ticketId: number, actionId: string) => {
     if (actionId === 'finalizado') {
-      setTickets(tickets.map(c => c.id === ticketId ? { ...c, status: 'finalizado' } : c));
+      setTickets(tickets.map(c => c.id === ticketId ? { ...c, status: 'finalizado', finalizadoManualmente: true } : c));
     } else if (actionId === 'anulado') {
       setTickets(tickets.map(c => c.id === ticketId ? { ...c, status: 'anulado' } : c));
     } else if (actionId === 'copiar') {
-      // Mock copy to clipboard
-      navigator.clipboard.writeText(`https://copayex.com/pay/${ticketId}`).then(() => {
-        showNotification('Link de pago copiado', {
-          label: 'Ir a pagar',
-          onClick: () => {
-            setSelectedTicketId(ticketId);
-            setCurrentView('pago-pantalla');
-          }
-        });
-      });
+      setQrModalTicketId(ticketId);
+      setIsQRModalOpen(true);
     } else if (actionId === 'vincular') {
       console.log('Vinculando a QR ticket', ticketId);
     }
@@ -1478,12 +1591,15 @@ export default function App() {
                               <td className="px-6 py-4 text-sm font-bold text-gray-900 text-right">
                                 ${formatCurrency(ticketPagado)} / ${formatCurrency(ticket.total)}
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600 text-right">{ticket.fecha}</td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="text-xs text-gray-600">{ticket.fecha.split(', ')[0]}</div>
+                                <div className="text-[10px] text-gray-400">{ticket.fecha.split(', ')[1]}</div>
+                              </td>
                               <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                                 {activeTab === 'activo' && (
                                   <ActionDropdown 
                                     options={[
-                                      { id: 'copiar', label: 'Copiar link de pago', icon: Copy },
+                                      { id: 'copiar', label: 'Link de pago', icon: DollarSign },
                                       { id: 'finalizado', label: 'Finalizado', icon: Check },
                                       { id: 'anulado', label: 'Anulado', icon: Ban },
                                       { id: 'vincular', label: 'Vincular a un QR', icon: LinkIcon },
@@ -1661,6 +1777,18 @@ export default function App() {
                               <RefreshCcw size={12} className={ticket.status === 'activo' ? 'animate-spin-slow' : ''} />
                               <span className="capitalize">{ticket.status}</span>
                             </div>
+                            {(ticket.status === 'activo' || ticket.status === 'finalizado') && (
+                              <button 
+                                onClick={() => {
+                                  setQrModalTicketId(ticket.id);
+                                  setIsQRModalOpen(true);
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                              >
+                                <DollarSign size={14} className="text-green-600" />
+                                <span>Link de pago</span>
+                              </button>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-sm font-bold text-gray-400">#{ticket.id}</span>
@@ -1849,7 +1977,7 @@ export default function App() {
                 <div className="border-b border-gray-100 mb-8">
                   <div className="flex gap-8">
                     {[
-                      { id: 'perfil', label: 'Perfil del negocio' },
+                      { id: 'cuenta', label: 'Cuenta' },
                       { id: 'metodos', label: 'Métodos de pago' },
                       { id: 'integraciones', label: 'Integraciones' }
                     ].map((tab) => (
@@ -1868,77 +1996,124 @@ export default function App() {
                 </div>
 
                 <div className="max-w-4xl">
-                  {configTab === 'perfil' && (
-                    <div className="max-w-2xl space-y-8">
-                      <div className="pb-8 border-b border-gray-100">
-                        <label className="block text-sm font-bold text-gray-900 mb-2">Email</label>
-                        <p className="text-sm text-gray-600 font-medium">juanperez@mail.com</p>
-                      </div>
-
-                      <div className="pb-8 border-b border-gray-100">
-                        <label className="block text-sm font-bold text-gray-900 mb-2">Client ID</label>
-                        <p className="text-sm text-gray-500 font-mono">cp_live_5829471036</p>
-                      </div>
-
-                      <div className="pb-8 border-b border-gray-100">
-                        <label className="block text-sm font-bold text-gray-900 mb-2">Nombre del Negocio</label>
-                        <div className="flex items-center gap-4">
-                          {isEditingName ? (
-                            <>
-                              <input 
-                                type="text" 
-                                value={businessName}
-                                onChange={(e) => setBusinessName(e.target.value)}
-                                className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-copayex-blue/10 focus:border-copayex-blue outline-none transition-all text-sm"
-                              />
-                              <button 
-                                onClick={() => {
-                                  setIsEditingName(false);
-                                  showNotification('Nombre del negocio actualizado con éxito');
-                                }}
-                                className="px-6 py-2 bg-copayex-blue text-white rounded-lg text-sm font-bold hover:bg-blue-900 transition-all"
-                              >
-                                Guardar
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm text-gray-600 font-medium">{businessName}</p>
-                              <button 
-                                onClick={() => setIsEditingName(true)}
-                                className="p-2 text-gray-400 hover:text-copayex-blue transition-all"
-                              >
-                                <Edit size={16} />
-                              </button>
-                            </>
-                          )}
+                  {configTab === 'cuenta' && (
+                    <div className="max-w-3xl space-y-8">
+                      {/* Business Profile Section */}
+                      <section className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Negocio</h3>
                         </div>
-                      </div>
+                        <div className="p-8">
+                          <div className="flex flex-col md:flex-row gap-10 items-start">
+                            {/* Logo Upload */}
+                            <div className="relative group shrink-0">
+                              <div className="w-32 h-32 bg-gray-50 rounded-2xl flex items-center justify-center border-2 border-dashed border-gray-200 overflow-hidden group-hover:border-copayex-blue/30 transition-all">
+                                {businessLogo ? (
+                                  <img src={businessLogo} alt="Business Logo" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="flex flex-col items-center gap-2 text-gray-400">
+                                    <Building2 size={32} />
+                                    <span className="text-[10px] font-bold uppercase">Logo</span>
+                                  </div>
+                                )}
+                              </div>
+                              <label className="absolute -bottom-2 -right-2 p-2.5 bg-copayex-blue text-white rounded-xl shadow-lg cursor-pointer hover:bg-blue-900 transition-all transform hover:scale-110 active:scale-95">
+                                <Plus size={16} />
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={handleLogoUpload}
+                                />
+                              </label>
+                            </div>
 
-                      <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-4">Foto de perfil</label>
-                        <div className="flex items-center gap-6">
-                          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200 overflow-hidden">
-                            {businessLogo ? (
-                              <img src={businessLogo} alt="Business Logo" className="w-full h-full object-cover" />
-                            ) : (
-                              <Building2 size={32} className="text-gray-300" />
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <label className="inline-block px-6 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer">
-                              Seleccionar foto
-                              <input 
-                                type="file" 
-                                className="hidden" 
-                                accept="image/*"
-                                onChange={handleLogoUpload}
-                              />
-                            </label>
-                            <p className="text-[10px] text-gray-400">Recomendado: 400x400px. Máx 2MB.</p>
+                            {/* Business Details */}
+                            <div className="flex-1 space-y-6 w-full">
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Nombre Comercial</label>
+                                <div className="flex items-center gap-3">
+                                  {isEditingName ? (
+                                    <div className="flex items-center gap-2 w-full max-w-md">
+                                      <input 
+                                        type="text" 
+                                        value={businessName}
+                                        onChange={(e) => setBusinessName(e.target.value)}
+                                        className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-copayex-blue/5 focus:border-copayex-blue outline-none transition-all text-sm font-bold text-gray-900"
+                                        autoFocus
+                                      />
+                                      <button 
+                                        onClick={() => {
+                                          setIsEditingName(false);
+                                          showNotification('Nombre del negocio actualizado');
+                                        }}
+                                        className="p-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all shadow-sm"
+                                      >
+                                        <Check size={20} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-3 group">
+                                      <h4 className="text-2xl font-black text-gray-900">{businessName}</h4>
+                                      <button 
+                                        onClick={() => setIsEditingName(true)}
+                                        className="p-1.5 text-gray-300 hover:text-copayex-blue transition-all opacity-0 group-hover:opacity-100"
+                                      >
+                                        <Edit size={18} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Client ID</label>
+                                <div className="flex items-center gap-3">
+                                  <p className="text-sm font-mono text-gray-600">cp_live_5829471036</p>
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText('cp_live_5829471036');
+                                      showNotification('Client ID copiado');
+                                    }}
+                                    className="p-1.5 text-gray-300 hover:text-copayex-blue transition-all"
+                                    title="Copiar ID"
+                                  >
+                                    <Copy size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </section>
+
+                      {/* User Profile Section */}
+                      <section className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Usuario</h3>
+                        </div>
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-copayex-blue border border-blue-100">
+                              <User size={24} />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Email de acceso</label>
+                              <p className="text-sm font-bold text-gray-900">juanperez@mail.com</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-gray-100">
+                              <Lock size={20} />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">User ID</label>
+                              <p className="text-sm font-mono text-gray-600">usr_9284710365</p>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
                     </div>
                   )}
 
@@ -2340,7 +2515,6 @@ export default function App() {
                   };
                   
                   setPagos([newPago, ...pagos]);
-                  setTickets(tickets.map(c => c.id === selectedTicketId ? { ...c, pagado: c.pagado + amount } : c));
                   showNotification('Pago realizado con éxito');
                 }}
               />
@@ -2356,15 +2530,36 @@ export default function App() {
       />
 
       <AnimatePresence>
+        {isQRModalOpen && (
+          <QRLinkModal 
+            isOpen={isQRModalOpen}
+            onClose={() => setIsQRModalOpen(false)}
+            ticketId={qrModalTicketId}
+            onGoToPay={(id) => {
+              setSelectedTicketId(id);
+              setCurrentView('pago-pantalla');
+              setIsQRModalOpen(false);
+            }}
+            onCopyLink={(id) => {
+              navigator.clipboard.writeText(`https://copayex.com/pay/${id}`).then(() => {
+                showNotification('Link de pago copiado');
+                setIsQRModalOpen(false);
+              });
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {toast && (
           <motion.div
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 50, x: '-50%' }}
-            className="fixed bottom-8 left-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-4 z-[100] whitespace-nowrap"
+            className="fixed bottom-8 left-1/2 bg-[#dcfce7] text-green-800 border border-green-200 px-6 py-3 rounded-full shadow-lg flex items-center gap-4 z-[100] whitespace-nowrap"
           >
             <div className="flex items-center gap-2">
-              <Check size={18} />
+              <Check size={18} className="text-green-600" />
               <span className="font-bold text-sm">{toast.message}</span>
             </div>
             {toast.action && (
@@ -2373,7 +2568,7 @@ export default function App() {
                   toast.action?.onClick();
                   setToast(null);
                 }}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-xs font-bold transition-colors"
+                className="px-3 py-1 bg-green-800/10 hover:bg-green-800/20 rounded-full text-xs font-bold transition-colors"
               >
                 {toast.action.label}
               </button>
