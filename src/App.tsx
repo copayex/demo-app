@@ -753,11 +753,13 @@ const PagoPantalla = ({
   const [calcPrevValue, setCalcPrevValue] = useState<string | null>(null);
   const [calcOperator, setCalcOperator] = useState<string | null>(null);
   const [calcWaitingForOperand, setCalcWaitingForOperand] = useState(false);
+  const [hasCalcResult, setHasCalcResult] = useState(false);
   const optionsMenuRef = React.useRef<HTMLDivElement>(null);
   const shareModalRef = React.useRef<HTMLDivElement>(null);
   const calculatorModalRef = React.useRef<HTMLDivElement>(null);
 
   const handleCalcNumber = (num: string) => {
+    setHasCalcResult(false);
     if (calcWaitingForOperand) {
       setCalcDisplay(num);
       setCalcWaitingForOperand(false);
@@ -777,6 +779,7 @@ const PagoPantalla = ({
   };
 
   const handleCalcOperator = (nextOperator: string) => {
+    setHasCalcResult(false);
     const inputValue = parseFloat(calcDisplay);
 
     if (calcPrevValue === null) {
@@ -801,6 +804,7 @@ const PagoPantalla = ({
       setCalcPrevValue(null);
       setCalcOperator(null);
       setCalcWaitingForOperand(true);
+      setHasCalcResult(true);
     }
   };
 
@@ -809,6 +813,7 @@ const PagoPantalla = ({
     setCalcPrevValue(null);
     setCalcOperator(null);
     setCalcWaitingForOperand(false);
+    setHasCalcResult(false);
   };
 
   const handleCalcInsert = () => {
@@ -906,7 +911,7 @@ const PagoPantalla = ({
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`h-[97vh] aspect-[9/18] bg-copayex-blue rounded-2xl shadow-2xl flex flex-col relative ${['name', 'method', 'card', 'bank'].includes(step) ? 'overflow-hidden' : 'overflow-y-auto'}`}
+        className={`h-[97vh] aspect-[9/18] bg-copayex-blue rounded-2xl shadow-2xl flex flex-col relative ${(['name', 'method', 'card', 'bank'].includes(step) || isCalculatorOpen) ? 'overflow-hidden' : 'overflow-y-auto'}`}
       >
         {/* Content wrapper with conditional blur */}
         <div className={`flex flex-col h-full transition-all duration-300 ${step === 'name' ? 'blur-md pointer-events-none' : ''}`}>
@@ -1070,7 +1075,7 @@ const PagoPantalla = ({
                         <p className={`font-bold text-sm ${pago.status === 'reembolsado' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
                           $ {formatCurrency(pago.monto)}
                         </p>
-                        <p className="text-[9px] text-gray-400">{pago.status === 'reembolsado' ? 'Reembolsado' : pago.fecha}</p>
+                        <p className="text-[9px] text-gray-400">{pago.fecha}</p>
                       </div>
                     </div>
                   ))
@@ -1391,8 +1396,8 @@ const PagoPantalla = ({
                 className="bg-white w-full rounded-t-3xl p-6 flex flex-col shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-gray-900">Calculadora</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-bold text-gray-400">Total: ${formatCurrency(ticket.total)}</p>
                   <button onClick={() => setIsCalculatorOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
                     <X size={20} className="text-gray-400" />
                   </button>
@@ -1424,7 +1429,7 @@ const PagoPantalla = ({
                   <button onClick={() => handleCalcNumber('4')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">4</button>
                   <button onClick={() => handleCalcNumber('5')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">5</button>
                   <button onClick={() => handleCalcNumber('6')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">6</button>
-                  <button onClick={handleCalcEqual} className="aspect-square flex items-center justify-center bg-copayex-blue text-white font-bold rounded-xl hover:bg-blue-900 transition-all row-span-2 h-full"><Equal size={24} /></button>
+                  <button onClick={handleCalcEqual} className="flex items-center justify-center bg-copayex-blue text-white font-bold rounded-xl hover:bg-blue-900 transition-all row-span-2 h-full"><Equal size={24} /></button>
 
                   {/* Row 4 */}
                   <button onClick={() => handleCalcNumber('1')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">1</button>
@@ -1432,9 +1437,15 @@ const PagoPantalla = ({
                   <button onClick={() => handleCalcNumber('3')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">3</button>
 
                   {/* Row 5 */}
-                  <button onClick={() => handleCalcNumber('0')} className="col-span-2 h-14 flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">0</button>
+                  <button onClick={() => handleCalcNumber('0')} className="col-span-2 h-full flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">0</button>
                   <button onClick={() => handleCalcNumber('.')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">,</button>
-                  <button onClick={handleCalcInsert} className="aspect-square flex items-center justify-center bg-[#1a3a5a] text-white font-bold rounded-xl hover:bg-[#152e48] transition-all"><ArrowRight size={24} /></button>
+                  <button 
+                    onClick={handleCalcInsert} 
+                    disabled={!hasCalcResult}
+                    className="aspect-square flex items-center justify-center bg-[#1a3a5a] text-white font-bold rounded-xl hover:bg-[#152e48] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ArrowRight size={24} />
+                  </button>
                 </div>
               </motion.div>
             </div>
