@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -32,6 +33,7 @@ import {
   User,
   Ban,
   Ticket,
+  Info,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -42,7 +44,12 @@ import {
   ShoppingCart,
   Pencil,
   Edit,
-  DollarSign
+  DollarSign,
+  Share,
+  Calculator,
+  Divide,
+  Minus,
+  Equal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -82,6 +89,113 @@ const formatCurrency = (amount: number) => {
   const parts = amount.toFixed(2).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return parts.join(',');
+};
+
+const TotalTooltip = ({ total, label = "Total", className = "" }: { total: number, label?: string, className?: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const triggerRef = React.useRef<HTMLDivElement>(null);
+  const iconRef = React.useRef<HTMLButtonElement>(null);
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
+
+  const updateCoords = () => {
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom,
+        left: rect.left + rect.width / 2
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node) && 
+          triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (isOpen || isHovered) {
+      updateCoords();
+      window.addEventListener('resize', updateCoords);
+      window.addEventListener('scroll', updateCoords, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords, true);
+    };
+  }, [isOpen, isHovered]);
+
+  const baseAmount = total / 1.00484;
+  const commission = total - baseAmount;
+
+  const tooltipContent = (
+    <AnimatePresence>
+      {(isOpen || isHovered) && (
+        <motion.div
+          ref={tooltipRef}
+          initial={{ opacity: 0, y: -10, x: '-50%', scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, x: '-50%', scale: 1 }}
+          exit={{ opacity: 0, y: -10, x: '-50%', scale: 0.95 }}
+          style={{ 
+            position: 'fixed', 
+            top: coords.top + 8, 
+            left: coords.left,
+            zIndex: 9999
+          }}
+          className="w-max min-w-[160px] bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-left normal-case tracking-normal pointer-events-auto"
+        >
+          <div className="space-y-3">
+            <div>
+              <p className="text-[11px] text-gray-500 font-medium leading-none mb-1">Total del ticket</p>
+              <p className="text-sm font-bold text-gray-900">$ {formatCurrency(baseAmount)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-gray-500 font-medium leading-none mb-1">Tarifa de servicio</p>
+              <p className="text-sm font-bold text-gray-900">$ {formatCurrency(commission)}</p>
+            </div>
+            <div className="pt-2 border-t border-gray-50">
+              <p className="text-[11px] text-gray-900 font-bold leading-none mb-1">Monto final</p>
+              <p className="text-sm font-bold text-copayex-blue">$ {formatCurrency(total)}</p>
+            </div>
+          </div>
+          {/* Arrow pointing up */}
+          <div 
+            className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-white"
+            style={{ filter: 'drop-shadow(0 -1px 1px rgba(0,0,0,0.05))' }}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className={`relative inline-flex items-center gap-1 ${className}`} ref={triggerRef}>
+      <span 
+        className="cursor-help"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {label}
+      </span>
+      <button
+        ref={iconRef}
+        onClick={() => setIsOpen(!isOpen)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="text-gray-400 hover:text-gray-600 transition-colors p-0 border-none bg-transparent flex items-center justify-center outline-none"
+      >
+        <Info size={12} />
+      </button>
+      {createPortal(tooltipContent, document.body)}
+    </div>
+  );
 };
 
 // --- Components ---
@@ -416,7 +530,7 @@ const Header = () => {
 const CreateTicketModal = ({ isOpen, onClose, onCreate }: { isOpen: boolean, onClose: () => void, onCreate: (ticket: Omit<TicketType, 'id' | 'fecha' | 'status' | 'pagado'>) => void }) => {
   const [descripcion, setDescripcion] = useState('');
   const [monto, setMonto] = useState('0');
-  const [incluirComision, setIncluirComision] = useState(false);
+  const [incluirComision, setIncluirComision] = useState(true);
   const [metodosHabilitados, setMetodosHabilitados] = useState<string[]>(['cc', 'dc', 'mp', 'tb']);
 
   if (!isOpen) return null;
@@ -448,7 +562,7 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }: { isOpen: boolean, onC
     // Reset form
     setDescripcion('');
     setMonto('0');
-    setIncluirComision(false);
+    setIncluirComision(true);
     setMetodosHabilitados(['cc', 'dc', 'mp', 'tb']);
   };
 
@@ -547,25 +661,14 @@ const CreateTicketModal = ({ isOpen, onClose, onCreate }: { isOpen: boolean, onC
                 className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-copayex-blue/20 focus:border-copayex-blue outline-none transition-all text-left font-mono font-bold"
               />
             </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Incluir tarifa de copayex</span>
-              <button 
-                onClick={() => setIncluirComision(!incluirComision)}
-                className={`w-8 h-4 rounded-full transition-all duration-200 relative ${incluirComision ? 'bg-copayex-blue' : 'bg-gray-300'}`}
-              >
-                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-200 ${incluirComision ? 'left-[17px]' : 'left-0.5'}`} />
-              </button>
+            <div className="mt-2 space-y-0.5">
+              <p className="text-[12.6px] font-medium text-gray-500">
+                Tarifa (0,4% + IVA): ${calculateCommission(monto)}
+              </p>
+              <p className="text-sm font-medium text-gray-700">
+                Monto final: ${calculateFinalAmount(monto)}
+              </p>
             </div>
-            {incluirComision && (
-              <div className="mt-1 space-y-0.5">
-                <p className="text-[12.6px] font-medium text-gray-500">
-                  Tarifa (0,4% + IVA): ${calculateCommission(monto)}
-                </p>
-                <p className="text-sm font-medium text-gray-700">
-                  Monto final: ${calculateFinalAmount(monto)}
-                </p>
-              </div>
-            )}
           </div>
           
           <div>
@@ -628,7 +731,8 @@ const PagoPantalla = ({
   businessLogo,
   businessName,
   onBack, 
-  onPaymentComplete 
+  onPaymentComplete,
+  showNotification
 }: { 
   ticket: TicketType; 
   pagos: PagoRecibido[];
@@ -636,18 +740,95 @@ const PagoPantalla = ({
   businessName: string;
   onBack: () => void;
   onPaymentComplete: (amount: number, name: string, method: string) => void;
+  showNotification: (message: string) => void;
 }) => {
   const [step, setStep] = useState<'name' | 'dashboard' | 'method' | 'card' | 'bank'>('name');
   const [userName, setUserName] = useState('');
   const [amountToPay, setAmountToPay] = useState('0');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [calcDisplay, setCalcDisplay] = useState('0');
+  const [calcPrevValue, setCalcPrevValue] = useState<string | null>(null);
+  const [calcOperator, setCalcOperator] = useState<string | null>(null);
+  const [calcWaitingForOperand, setCalcWaitingForOperand] = useState(false);
   const optionsMenuRef = React.useRef<HTMLDivElement>(null);
+  const shareModalRef = React.useRef<HTMLDivElement>(null);
+  const calculatorModalRef = React.useRef<HTMLDivElement>(null);
+
+  const handleCalcNumber = (num: string) => {
+    if (calcWaitingForOperand) {
+      setCalcDisplay(num);
+      setCalcWaitingForOperand(false);
+    } else {
+      setCalcDisplay(calcDisplay === '0' ? num : calcDisplay + num);
+    }
+  };
+
+  const performCalculation = (prevValue: number, nextValue: number, operator: string) => {
+    switch (operator) {
+      case '+': return prevValue + nextValue;
+      case '-': return prevValue - nextValue;
+      case '*': return prevValue * nextValue;
+      case '/': return prevValue / nextValue;
+      default: return nextValue;
+    }
+  };
+
+  const handleCalcOperator = (nextOperator: string) => {
+    const inputValue = parseFloat(calcDisplay);
+
+    if (calcPrevValue === null) {
+      setCalcPrevValue(calcDisplay);
+    } else if (calcOperator) {
+      const currentValue = parseFloat(calcPrevValue || '0');
+      const newValue = performCalculation(currentValue, inputValue, calcOperator);
+      setCalcPrevValue(String(newValue));
+      setCalcDisplay(String(newValue));
+    }
+
+    setCalcWaitingForOperand(true);
+    setCalcOperator(nextOperator);
+  };
+
+  const handleCalcEqual = () => {
+    const inputValue = parseFloat(calcDisplay);
+    if (calcPrevValue !== null && calcOperator) {
+      const currentValue = parseFloat(calcPrevValue);
+      const newValue = performCalculation(currentValue, inputValue, calcOperator);
+      setCalcDisplay(String(newValue));
+      setCalcPrevValue(null);
+      setCalcOperator(null);
+      setCalcWaitingForOperand(true);
+    }
+  };
+
+  const handleCalcClear = () => {
+    setCalcDisplay('0');
+    setCalcPrevValue(null);
+    setCalcOperator(null);
+    setCalcWaitingForOperand(false);
+  };
+
+  const handleCalcInsert = () => {
+    const val = parseFloat(calcDisplay);
+    if (!isNaN(val)) {
+      setAmountToPay(formatCurrency(val));
+    }
+    setIsCalculatorOpen(false);
+  };
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (optionsMenuRef.current && !optionsMenuRef.current.contains(event.target as Node)) {
         setIsOptionsMenuOpen(false);
+      }
+      if (shareModalRef.current && !shareModalRef.current.contains(event.target as Node)) {
+        setIsShareModalOpen(false);
+      }
+      if (calculatorModalRef.current && !calculatorModalRef.current.contains(event.target as Node)) {
+        setIsCalculatorOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -735,7 +916,14 @@ const PagoPantalla = ({
               <LogoPayment className="h-[25px]" />
             </div>
 
-            <div className="absolute top-4 right-4" ref={optionsMenuRef}>
+            <div className="absolute top-4 right-4 flex items-center gap-1" ref={optionsMenuRef}>
+              <button 
+                onClick={() => setIsShareModalOpen(true)}
+                className="p-1.5 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10"
+              >
+                <Share size={20} />
+              </button>
+
               <button 
                 onClick={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
                 className="p-1.5 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10"
@@ -790,7 +978,7 @@ const PagoPantalla = ({
             {/* Summary Card */}
             <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
               <div className="text-center mb-4">
-                <p className="text-gray-400 font-bold mb-0.5 text-xs">Total</p>
+                <TotalTooltip total={ticket.total} className="text-gray-400 font-bold mb-0.5 text-xs" />
                 <p className="text-xl font-bold text-gray-900">$ {formatCurrency(ticket.total)}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -834,6 +1022,7 @@ const PagoPantalla = ({
               )
             ) : (
               <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-3">Elige tu monto a pagar</p>
                 <div className="relative flex items-center justify-center mb-4">
                   <span className="absolute left-0 text-xl font-bold text-gray-400">$</span>
                   <input 
@@ -844,13 +1033,21 @@ const PagoPantalla = ({
                     className="w-full text-center text-3xl font-bold text-gray-900 outline-none placeholder:text-gray-200"
                   />
                 </div>
-                <button 
-                  onClick={() => getNumericAmount(amountToPay) > 0 && setStep('method')}
-                  disabled={getNumericAmount(amountToPay) > restaPagar || getNumericAmount(amountToPay) <= 0}
-                  className="w-full py-3 bg-[#1a3a5a] text-white font-bold rounded-lg hover:bg-[#152e48] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Pagar
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setIsCalculatorOpen(true)}
+                    className="aspect-square p-3 bg-slate-400 text-white rounded-lg hover:bg-slate-500 transition-all flex items-center justify-center"
+                  >
+                    <Calculator size={20} />
+                  </button>
+                  <button 
+                    onClick={() => getNumericAmount(amountToPay) > 0 && setStep('method')}
+                    disabled={getNumericAmount(amountToPay) > restaPagar || getNumericAmount(amountToPay) <= 0}
+                    className="flex-1 py-3 bg-[#1a3a5a] text-white font-bold rounded-lg hover:bg-[#152e48] transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Pagar
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1005,14 +1202,10 @@ const PagoPantalla = ({
                       <p className="text-base font-bold text-gray-900">20123456780</p>
                     </div>
 
-                    <div className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-400 font-bold mb-3 uppercase text-[10px] tracking-wider">Alias</p>
-                        <p className="text-base font-bold text-gray-900">cpyx.1234.talo</p>
-                      </div>
-                      <button className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors">
-                        <Copy size={16} />
-                      </button>
+                    <div className="bg-gray-100 rounded-lg p-4 border border-gray-200">
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        <span className="font-bold">Atención:</span> Este CVU es único para esta transferencia de <span className="font-bold">${amountToPay}</span>. Por favor, no transfieras otro importe ni compartas los datos de pago con otras personas.
+                      </p>
                     </div>
 
                     <div className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm flex items-center justify-between">
@@ -1128,6 +1321,120 @@ const PagoPantalla = ({
                   >
                     Pagar
                   </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Share Modal */}
+        <AnimatePresence>
+          {isShareModalOpen && (
+            <div className="absolute inset-0 z-[300] flex items-end justify-center bg-black/40 backdrop-blur-sm">
+              <motion.div
+                ref={shareModalRef}
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="bg-white w-full rounded-t-3xl p-8 pt-6 flex flex-col items-center shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-[17.6px] font-bold text-gray-900 mb-6">Compartir link de pago</h2>
+                
+                <div className="bg-white p-6 rounded-2xl border-2 border-gray-50 shadow-inner mb-8">
+                  <QRCodeSVG 
+                    value="https://copayex.com/pay/7"
+                    size={180}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+
+                <div className="w-full space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-sm text-gray-500 truncate flex-1">https://copayex.com/pay/7</p>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText("https://copayex.com/pay/7");
+                        showNotification('Link de pago copiado');
+                        setIsShareModalOpen(false);
+                      }}
+                      className="p-2 text-copayex-blue hover:bg-copayex-blue/10 rounded-lg transition-all"
+                    >
+                      <Copy size={20} />
+                    </button>
+                  </div>
+
+                  <button 
+                    onClick={() => setIsShareModalOpen(false)}
+                    className="w-full py-4 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-all"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Calculator Modal */}
+        <AnimatePresence>
+          {isCalculatorOpen && (
+            <div className="absolute inset-0 z-[350] flex items-end justify-center bg-black/40 backdrop-blur-sm">
+              <motion.div
+                ref={calculatorModalRef}
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="bg-white w-full rounded-t-3xl p-6 flex flex-col shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Calculadora</h2>
+                  <button onClick={() => setIsCalculatorOpen(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <X size={20} className="text-gray-400" />
+                  </button>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-6 mb-6 text-right">
+                  <p className="text-sm text-gray-400 font-bold mb-1 h-5">
+                    {calcPrevValue} {calcOperator}
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 truncate">
+                    {calcDisplay.replace('.', ',')}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-3">
+                  {/* Row 1 */}
+                  <button onClick={handleCalcClear} className="aspect-square flex items-center justify-center bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all">C</button>
+                  <button onClick={() => handleCalcOperator('/')} className="aspect-square flex items-center justify-center bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all"><Divide size={20} /></button>
+                  <button onClick={() => handleCalcOperator('*')} className="aspect-square flex items-center justify-center bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all"><X size={20} /></button>
+                  <button onClick={() => handleCalcOperator('-')} className="aspect-square flex items-center justify-center bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all"><Minus size={20} /></button>
+                  
+                  {/* Row 2 */}
+                  <button onClick={() => handleCalcNumber('7')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">7</button>
+                  <button onClick={() => handleCalcNumber('8')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">8</button>
+                  <button onClick={() => handleCalcNumber('9')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">9</button>
+                  <button onClick={() => handleCalcOperator('+')} className="aspect-square flex items-center justify-center bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all"><Plus size={20} /></button>
+
+                  {/* Row 3 */}
+                  <button onClick={() => handleCalcNumber('4')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">4</button>
+                  <button onClick={() => handleCalcNumber('5')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">5</button>
+                  <button onClick={() => handleCalcNumber('6')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">6</button>
+                  <button onClick={handleCalcEqual} className="aspect-square flex items-center justify-center bg-copayex-blue text-white font-bold rounded-xl hover:bg-blue-900 transition-all row-span-2 h-full"><Equal size={24} /></button>
+
+                  {/* Row 4 */}
+                  <button onClick={() => handleCalcNumber('1')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">1</button>
+                  <button onClick={() => handleCalcNumber('2')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">2</button>
+                  <button onClick={() => handleCalcNumber('3')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">3</button>
+
+                  {/* Row 5 */}
+                  <button onClick={() => handleCalcNumber('0')} className="col-span-2 h-14 flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">0</button>
+                  <button onClick={() => handleCalcNumber('.')} className="aspect-square flex items-center justify-center bg-gray-50 text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-all text-xl">,</button>
+                  <button onClick={handleCalcInsert} className="aspect-square flex items-center justify-center bg-[#1a3a5a] text-white font-bold rounded-xl hover:bg-[#152e48] transition-all"><ArrowRight size={24} /></button>
                 </div>
               </motion.div>
             </div>
@@ -1799,11 +2106,13 @@ export default function App() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-10 gap-8 mb-8">
-                        <div className="md:col-span-6 border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                        <div className="md:col-span-6 border border-gray-100 rounded-xl bg-white shadow-sm">
                           <table className="w-full text-center border-collapse">
                             <thead>
                               <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Total</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                  <TotalTooltip total={ticket.total} />
+                                </th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Pagado</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-600 uppercase tracking-wider">Resta Pagar</th>
                               </tr>
@@ -2517,6 +2826,7 @@ export default function App() {
                   setPagos([newPago, ...pagos]);
                   showNotification('Pago realizado con éxito');
                 }}
+                showNotification={showNotification}
               />
             )}
           </AnimatePresence>
