@@ -49,7 +49,9 @@ import {
   Calculator,
   Divide,
   Minus,
-  Equal
+  Equal,
+  Camera,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -911,10 +913,10 @@ const PagoPantalla = ({
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`h-[97vh] aspect-[9/18] bg-copayex-blue rounded-2xl shadow-2xl flex flex-col relative ${(['name', 'method', 'card', 'bank'].includes(step) || isCalculatorOpen) ? 'overflow-hidden' : 'overflow-y-auto'}`}
+        className="h-[97vh] aspect-[9/18] bg-copayex-blue rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
       >
         {/* Content wrapper with conditional blur */}
-        <div className={`flex flex-col h-full transition-all duration-300 ${step === 'name' ? 'blur-md pointer-events-none' : ''}`}>
+        <div className={`flex flex-col h-full transition-all duration-300 ${step === 'name' ? 'blur-md pointer-events-none' : ''} ${(['name', 'method', 'card', 'bank'].includes(step) || isCalculatorOpen) ? 'overflow-hidden' : 'overflow-y-auto'}`}>
           {/* Header */}
           <div className="p-4 shrink-0 flex flex-col items-center relative">
             <div className="absolute top-4 left-4">
@@ -1456,7 +1458,561 @@ const PagoPantalla = ({
   );
 };
 
-const LoginView = ({ onLogin }: { onLogin: () => void }) => {
+const RegisterView = ({ onBackToLogin, onRegister }: { onBackToLogin: () => void; onRegister: () => void }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100"
+      >
+        <div className="flex flex-col items-center mb-6">
+          <svg 
+            version="1.1" 
+            viewBox="0.0 0.0 960.0 720.0" 
+            fill="none" 
+            stroke="none" 
+            strokeLinecap="square" 
+            strokeMiterlimit="10" 
+            xmlnsXlink="http://www.w3.org/1999/xlink" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-32 w-auto mb-2"
+          >
+            <clipPath id="p.0">
+              <path d="m0 0l960.0 0l0 720.0l-960.0 0l0 -720.0z" clipRule="nonzero"/>
+            </clipPath>
+            <g clipPath="url(#p.0)">
+              <path fill="#000000" fillOpacity="0.0" d="m0 0l960.0 0l0 720.0l-960.0 0z" fillRule="evenodd"/>
+              <g filter="url(#shadowFilter-p.1)">
+                <use xlinkHref="#p.1" transform="matrix(1.0 0.0 0.0 1.0 0.0 9.720113385826751)"/>
+              </g>
+              <defs>
+                <filter id="shadowFilter-p.1" filterUnits="userSpaceOnUse">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="9.720114" result="blur"/>
+                  <feComponentTransfer in="blur" colorInterpolationFilters="sRGB">
+                    <feFuncR type="linear" slope="0" intercept="0.0"/>
+                    <feFuncG type="linear" slope="0" intercept="0.0"/>
+                    <feFuncB type="linear" slope="0" intercept="0.0"/>
+                    <feFuncA type="linear" slope="0.28" intercept="0"/>
+                  </feComponentTransfer>
+                </filter>
+              </defs>
+              <g id="p.1">
+                <path fill="#6fa8dc" d="m543.2179 182.45258c-90.85248 0 -164.50299 53.816605 -164.50299 120.20276q0 60.10138 0 120.20276q82.251495 0 164.50299 0c90.85254 0 164.50305 -53.81662 164.50305 -120.20276c0 -66.386154 -73.65051 -120.20276 -164.50305 -120.20276z" fillRule="evenodd"/>
+              </g>
+              <g filter="url(#shadowFilter-p.2)">
+                <use xlinkHref="#p.2" transform="matrix(1.0 0.0 0.0 1.0 0.0 9.720113385826751)"/>
+              </g>
+              <defs>
+                <filter id="shadowFilter-p.2" filterUnits="userSpaceOnUse">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="9.720114" result="blur"/>
+                  <feComponentTransfer in="blur" colorInterpolationFilters="sRGB">
+                    <feFuncR type="linear" slope="0" intercept="0.0"/>
+                    <feFuncG type="linear" slope="0" intercept="0.0"/>
+                    <feFuncB type="linear" slope="0" intercept="0.0"/>
+                    <feFuncA type="linear" slope="0.28" intercept="0"/>
+                  </feComponentTransfer>
+                </filter>
+              </defs>
+              <g id="p.2">
+                <path fill="#3d85c6" d="m468.4076 134.82637c-86.21893 34.599762 -141.22864 113.10399 -122.867584 175.3441q16.622803 56.34784 33.245605 112.69565q78.05661 -31.324188 156.11319 -62.648407c86.21893 -34.599792 141.22864 -113.104004 122.867615 -175.3441c-18.361023 -62.240097 -103.13989 -84.64702 -189.35883 -50.04724z" fillRule="evenodd"/>
+              </g>
+              <g filter="url(#shadowFilter-p.3)">
+                <use xlinkHref="#p.3" transform="matrix(1.0 0.0 0.0 1.0 0.0 9.720113385826751)"/>
+              </g>
+              <defs>
+                <filter id="shadowFilter-p.3" filterUnits="userSpaceOnUse">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="9.720114" result="blur"/>
+                  <feComponentTransfer in="blur" colorInterpolationFilters="sRGB">
+                    <feFuncR type="linear" slope="0" intercept="0.0"/>
+                    <feFuncG type="linear" slope="0" intercept="0.0"/>
+                    <feFuncB type="linear" slope="0" intercept="0.0"/>
+                    <feFuncA type="linear" slope="0.28" intercept="0"/>
+                  </feComponentTransfer>
+                </filter>
+              </defs>
+              <g id="p.3">
+                <path fill="#0b5394" d="m356.79846 119.986084c-66.645386 70.33476 -88.7616 166.64447 -49.39795 215.11377q35.637085 43.880707 71.2742 87.76141q60.33606 -63.676178 120.67215 -127.352356c66.645386 -70.33476 88.7616 -166.64449 49.39795 -215.11377c-39.363647 -48.46929 -125.300964 -30.74382 -191.94635 39.59095z" fillRule="evenodd"/>
+              </g>
+              <path fill="#000000" fillOpacity="0.0" d="m10.391317 382.80222l939.21265 0l0 329.85825l-939.21265 0z" fillRule="evenodd"/>
+              <path fill="#3d85c6" d="m122.0266 617.3658q-14.96875 0 -26.828125 -6.984375q-11.859375 -7.0 -18.765625 -19.140625q-6.890625 -12.15625 -6.890625 -27.515625q0 -15.359375 6.890625 -27.5q6.90625 -12.15625 18.765625 -19.15625q11.859375 -7.0000305 26.828125 -7.0000305q13.796867 0 25.359367 4.8594055q11.578125 4.859375 18.375 13.609375l-16.90625 20.21875q-2.71875 -3.109375 -6.421875 -5.828125q-3.6875 -2.734375 -8.15625 -4.28125q-4.46875 -1.5625 -9.328117 -1.5625q-7.390625 0 -13.03125 3.40625q-5.640625 3.40625 -8.75 9.4375q-3.109375 6.015625 -3.109375 13.796875q0 7.375 3.203125 13.40625q3.21875 6.03125 8.84375 9.53125q5.640625 3.5 12.84375 3.5q5.0468674 0 9.328117 -1.265625q4.28125 -1.265625 7.875 -3.796875q3.59375 -2.53125 6.703125 -6.21875l16.71875 20.40625q-6.609375 8.359375 -18.375 13.21875q-11.765625 4.859375 -25.171867 4.859375zm109.25533 0q-16.140625 0 -28.6875 -6.984375q-12.53125 -7.0 -19.828125 -19.046875q-7.28125 -12.0625 -7.28125 -27.609375q0 -15.5625 7.28125 -27.609375q7.296875 -12.046875 19.828125 -19.046875q12.546875 -7.0000305 28.6875 -7.0000305q16.125 0 28.656265 7.0000305q12.546875 7.0 19.734375 19.046875q7.203125 12.046875 7.203125 27.609375q0 15.546875 -7.203125 27.609375q-7.1875 12.046875 -19.734375 19.046875q-12.531265 6.984375 -28.656265 6.984375zm0 -26.8125q6.984375 0 12.421875 -3.5q5.453125 -3.5 8.5625 -9.53125q3.109375 -6.03125 2.921875 -13.796875q0.1875 -7.78125 -2.921875 -13.90625q-3.109375 -6.125 -8.5625 -9.625q-5.4375 -3.5 -12.421875 -3.5q-7.0 0 -12.546875 3.5q-5.53125 3.5 -8.65625 9.625q-3.109375 6.125 -2.90625 13.90625q-0.203125 7.765625 2.90625 13.796875q3.125 6.03125 8.65625 9.53125q5.546875 3.5 12.546875 3.5z" fillRule="nonzero"/>
+              <path fill="#073763" d="m307.27692 658.19385l0 -145.98431l29.546875 0l1.171875 23.125l-5.828125 -1.75q1.359375 -6.40625 6.609375 -11.65625q5.25 -5.25 13.3125 -8.453125q8.0625 -3.2187805 17.015625 -3.2187805q13.21875 0 23.515625 6.9062805q10.296875 6.90625 16.21875 18.859375q5.9375 11.953125 5.9375 27.703125q0 15.546875 -5.9375 27.609375q-5.921875 12.046875 -16.328125 18.953125q-10.390625 6.890625 -23.796875 6.890625q-8.75 0 -16.71875 -3.296875q-7.96875 -3.3125 -13.421875 -8.953125q-5.4375 -5.640625 -7.1875 -12.25l7.1875 -2.71875l0 68.234314l-31.296875 0zm53.84375 -67.265564q7.0 0 12.25 -3.390625q5.25 -3.40625 8.15625 -9.421875q2.921875 -6.03125 2.921875 -14.390625q0 -8.171875 -2.921875 -14.296875q-2.90625 -6.125 -8.0625 -9.515625q-5.140625 -3.40625 -12.34375 -3.40625q-7.1875 0 -12.4375 3.3125q-5.25 3.296875 -8.171875 9.515625q-2.90625 6.21875 -2.90625 14.390625q0 8.359375 2.90625 14.390625q2.921875 6.015625 8.171875 9.421875q5.25 3.390625 12.4375 3.390625zm112.36899 26.25q-13.03125 0 -23.234375 -6.890625q-10.203125 -6.90625 -16.234375 -19.046875q-6.015625 -12.15625 -6.015625 -27.515625q0 -15.75 6.015625 -27.796875q6.03125 -12.0625 16.53125 -18.953125q10.5 -6.9062805 23.90625 -6.9062805q7.390625 0 13.5 2.1406555q6.125 2.140625 10.796875 5.9375q4.671875 3.78125 7.96875 8.734375q3.3125 4.953125 4.859375 10.59375l-6.40625 -0.78125l0 -24.484375l30.90622 0l0 103.21875l-31.49997 0l0 -24.875l7.0 -0.203125q-1.546875 5.4375 -5.046875 10.3125q-3.5 4.859375 -8.5625 8.546875q-5.046875 3.6875 -11.265625 5.828125q-6.21875 2.140625 -13.21875 2.140625zm8.546875 -26.25q7.1875 0 12.4375 -3.296875q5.25 -3.3125 8.171875 -9.421875q2.921875 -6.125 2.921875 -14.484375q0 -8.359375 -2.921875 -14.484375q-2.921875 -6.125 -8.171875 -9.515625q-5.25 -3.40625 -12.4375 -3.40625q-7.0 0 -12.15625 3.40625q-5.140625 3.390625 -8.0625 9.515625q-2.90625 6.125 -2.90625 14.484375q0 8.359375 2.90625 14.484375q2.921875 6.109375 8.0625 9.421875q5.15625 3.296875 12.15625 3.296875zm92.14554 69.203064l23.515625 -55.390564l0.390625 15.9375l-49.765625 -108.46875l35.1875 0l21.765625 51.90625q1.75 3.875 3.296875 8.359375q1.5625 4.46875 2.34375 8.546875l-4.265625 2.53125q1.15625 -2.921875 2.609375 -7.296875q1.46875 -4.375 3.21875 -9.421875l19.046875 -54.625l35.375 0l-43.921875 103.21875l-17.890625 44.703064l-30.90625 0zm154.73438 -42.765564q-17.109375 0 -29.75 -6.890625q-12.625 -6.90625 -19.625 -18.859375q-7.0 -11.953125 -7.0 -27.3125q0 -11.859375 3.890625 -21.765625q3.890625 -9.921875 10.875 -17.203125q7.0 -7.296875 16.625 -11.28125q9.625 -3.9844055 21.09375 -3.9844055q10.890625 0 19.921875 3.8906555q9.046875 3.890625 15.65625 10.890625q6.609375 6.984375 10.109375 16.515625q3.5 9.53125 3.109375 20.796875l-0.203125 8.359375l-82.21875 0l-4.46875 -17.5l61.421875 0l-3.3125 3.703125l0 -3.890625q-0.375 -4.859375 -3.0 -8.640625q-2.625 -3.796875 -6.90625 -5.9375q-4.28125 -2.140625 -9.71875 -2.140625q-7.578125 0 -12.9375 3.015625q-5.34375 3.015625 -8.0625 8.75q-2.71875 5.734375 -2.71875 14.09375q0 8.546875 3.59375 14.875q3.59375 6.3125 10.5 9.8125q6.90625 3.5 16.421875 3.5q6.609375 0 11.765625 -1.9375q5.15625 -1.953125 11.171875 -6.625l14.578125 20.609375q-6.015625 5.25 -12.828125 8.5625q-6.796875 3.296875 -13.890625 4.9375q-7.09375 1.65625 -14.09375 1.65625zm127.720215 -1.9375l-21.96875 -33.234375l-10.109375 -14.203125l-40.828125 -55.78125l37.328125 0l21.1875 31.6875l11.078125 15.15625l40.234375 56.375l-36.921875 0zm-73.875 0l41.59375 -57.921875l16.71875 20.015625l-21.578125 37.90625l-36.734375 0zm68.234375 -44.90625l-16.53125 -19.828125l20.421875 -38.484375l36.734375 0l-40.625 58.3125z" fillRule="nonzero"/>
+            </g>
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-bold text-[#073763] text-center mb-2">Crear una cuenta</h2>
+        <p className="text-gray-500 text-sm text-center px-4 mb-6">
+          Registrate en Copayex y accedé al detalle de tus cobros.
+        </p>
+
+        <div className="border-t border-gray-100 w-full mb-6"></div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">Usuario</label>
+            <input 
+              type="email" 
+              placeholder="email@email.com"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-copayex-blue/20 focus:border-copayex-blue outline-none transition-all placeholder:text-gray-400 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">Contraseña</label>
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="********"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-copayex-blue/20 focus:border-copayex-blue outline-none transition-all placeholder:text-gray-400 text-sm"
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <button 
+            onClick={onRegister}
+            className="w-full py-3.5 bg-[#073763] hover:bg-[#052544] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/10 mt-2 text-sm"
+          >
+            Registrate
+          </button>
+        </div>
+
+        <div className="border-t border-gray-100 w-full mt-6 mb-6"></div>
+
+        <div className="text-center">
+          <span className="text-sm text-gray-600 font-medium">¿Ya tenes cuenta? </span>
+          <button 
+            onClick={onBackToLogin}
+            className="text-sm text-[#073763] hover:underline font-bold"
+          >
+            Ingresar
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+interface OnboardingViewProps {
+  onComplete: (data: {
+    name: string;
+    logo: string | null;
+    paymentMethods: MetodoPago[];
+    collaborators: string;
+  }) => void;
+  initialMetodos: MetodoPago[];
+}
+
+const OnboardingView = ({ onComplete, initialMetodos }: OnboardingViewProps) => {
+  const [step, setStep] = useState(1);
+  const [accountName, setAccountName] = useState('');
+  const [accountLogo, setAccountLogo] = useState<string | null>(null);
+  
+  const [tempMethods, setTempMethods] = useState<MetodoPago[]>(() => 
+    initialMetodos.map(m => ({ ...m, conectado: false, cuenta: undefined, titular: undefined, email: undefined }))
+  );
+  
+  const [linkingMethodId, setLinkingMethodId] = useState<string | null>(null);
+  const [linkingEmail, setLinkingEmail] = useState('');
+  const [linkingUser, setLinkingUser] = useState('');
+
+  const [collaborators, setCollaborators] = useState<string>('1-3');
+
+  const handleLogoUploadLocal = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAccountLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startLinking = (id: string) => {
+    setLinkingMethodId(id);
+    setLinkingEmail('');
+    setLinkingUser('');
+  };
+
+  const confirmLink = (id: string) => {
+    setTempMethods(prev => prev.map(m => {
+      if (m.id === id) {
+        return {
+          ...m,
+          conectado: true,
+          cuenta: '#' + Math.floor(100000000 + Math.random() * 900000000).toString(),
+          titular: linkingUser || 'Juan Perez',
+          email: linkingEmail || 'email@email.com'
+        };
+      }
+      return m;
+    }));
+    setLinkingMethodId(null);
+  };
+
+  const toggleConnection = (id: string) => {
+    setTempMethods(prev => prev.map(m => {
+      if (m.id === id) {
+        if (m.conectado) {
+          return { ...m, conectado: false, cuenta: undefined, titular: undefined, email: undefined };
+        } else {
+          return {
+            ...m,
+            conectado: true,
+            cuenta: '#' + Math.floor(100000000 + Math.random() * 900000000).toString(),
+            titular: 'Juan Perez',
+            email: 'email@email.com'
+          };
+        }
+      }
+      return m;
+    }));
+  };
+
+  const handleNext = () => {
+    if (step < 4) {
+      setStep(step + 1);
+    } else {
+      onComplete({
+        name: accountName || 'Mi Cuenta',
+        logo: accountLogo,
+        paymentMethods: tempMethods,
+        collaborators,
+      });
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const collaboratorOptions = [
+    { value: '1-3', label: '1 - 3 colaboradores', desc: 'Ideal para pequeños comercios y profesionales independientes.' },
+    { value: '4-7', label: '4 - 7 colaboradores', desc: 'Para equipos en crecimiento y locales medianos.' },
+    { value: '8-15', label: '8 - 15 colaboradores', desc: 'Para empresas estructuradas con múltiples cajeros.' },
+    { value: '16-30', label: '16 - 30 colaboradores', desc: 'Soporte robusto para locales de gran escala.' },
+    { value: '+30', label: '+30 colaboradores', desc: 'Soluciones corporativas de alta demanda.' }
+  ];
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 md:p-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-xl border border-gray-100 overflow-hidden"
+      >
+        {/* Header containing Copayex Mini Logo and Progress bar */}
+        <div className="p-8 pb-4 border-b border-gray-50 flex items-center justify-between">
+          <Logo className="h-[27.82px]" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-gray-400">Paso {step} de 4</span>
+          </div>
+        </div>
+
+        {/* Progress Bar indicator */}
+        <div className="w-full bg-gray-100 h-1.5 overflow-hidden">
+          <div 
+            className="bg-[#073763] h-full transition-all duration-300"
+            style={{ width: `${(step / 4) * 100}%` }}
+          />
+        </div>
+
+        <div className="p-8 min-h-[360px] flex flex-col justify-between">
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-2xl font-black text-[#073763] mb-2">¡Te damos la bienvenida!</h2>
+                  <p className="text-sm text-gray-500 mb-6">Empecemos configurando el nombre de tu cuenta o negocio.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de la cuenta</label>
+                    <div className="relative">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Building2 size={18} />
+                      </div>
+                      <input 
+                        type="text"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder="Ej.: miTienda, MaxStore, Cafetería Central"
+                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-[#073763]/5 focus:border-[#073763] outline-none transition-all placeholder:text-gray-400 text-sm font-medium"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400">Este será el nombre comercial que verán tus colaboradores y clientes.</p>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-2xl font-black text-[#073763] mb-2">Personalizá tu perfil</h2>
+                  <p className="text-sm text-gray-500 mb-6">Subí un logo o foto comercial para que se muestre en tu panel.</p>
+                </div>
+
+                <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-all relative group h-48">
+                  {accountLogo ? (
+                    <div className="relative">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border border-gray-200 shadow-inner">
+                        <img src={accountLogo} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                      <button 
+                        onClick={() => setAccountLogo(null)}
+                        className="absolute -top-1 -right-1 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-[#073763]">
+                        <Camera size={24} />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-gray-700">Subir una foto o logo</span>
+                        <p className="text-xs text-gray-400 mt-1">Formato PNG, JPG o WEBP. Máx 5 MB.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <label className="absolute inset-0 cursor-pointer opacity-0">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleLogoUploadLocal}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div className="text-center">
+                  <span className="text-xs text-gray-400">Podés cambiar esta foto en cualquier momento desde la configuración.</span>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-2xl font-black text-[#073763] mb-2">Vinculá tus billeteras</h2>
+                  <p className="text-sm text-gray-500 mb-6">Conectá los métodos de pago que quieras usar para retirar o recibir fondos de tus cobros.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {tempMethods.map((metodo) => (
+                    <div 
+                      key={metodo.id}
+                      className={`border rounded-2xl p-4 transition-all ${
+                        metodo.conectado 
+                          ? 'border-green-200 bg-green-50/20' 
+                          : 'border-gray-100 bg-white hover:border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center border border-gray-100 p-1.5 overflow-hidden">
+                            {metodo.logo ? (
+                              <img src={metodo.logo} alt={metodo.nombre} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Building2 size={20} className="text-gray-400" />
+                            )}
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-bold text-gray-900 text-sm">{metodo.nombre}</h4>
+                            <p className="text-xs text-gray-500 truncate max-w-[180px] sm:max-w-xs md:max-w-sm">
+                              {metodo.conectado ? `Vinculado: ${metodo.email}` : 'Sin conectar'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          {metodo.conectado ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md">VINCULADO</span>
+                              <button 
+                                onClick={() => toggleConnection(metodo.id)}
+                                className="text-xs text-red-500 hover:underline font-bold"
+                              >
+                                Desconectar
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => startLinking(metodo.id)}
+                              className="text-xs bg-[#073763] hover:bg-opacity-95 text-white font-bold px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              Vincular
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {linkingMethodId === metodo.id && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mt-4 pt-4 border-t border-gray-100 space-y-3"
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="text-left">
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Nombre Completo / Titular</label>
+                              <input 
+                                type="text"
+                                value={linkingUser}
+                                onChange={(e) => setLinkingUser(e.target.value)}
+                                placeholder="Ej.: Juan Pérez"
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs text-gray-800 focus:ring-1 focus:ring-[#073763]/25"
+                              />
+                            </div>
+                            <div className="text-left">
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Email de la cuenta</label>
+                              <input 
+                                type="email"
+                                value={linkingEmail}
+                                onChange={(e) => setLinkingEmail(e.target.value)}
+                                placeholder="ejemplo@mail.com"
+                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none text-xs text-gray-800 focus:ring-1 focus:ring-[#073763]/25"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button 
+                              onClick={() => setLinkingMethodId(null)}
+                              className="px-3 py-1.5 border border-gray-200 text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50"
+                            >
+                              Cancelar
+                            </button>
+                            <button 
+                              onClick={() => confirmLink(metodo.id)}
+                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-all"
+                            >
+                              Confirmar Vínculo
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h2 className="text-2xl font-black text-[#073763] mb-2">Escala de tu equipo</h2>
+                  <p className="text-sm text-gray-500 mb-6">Contanos cuántas personas van a utilizar la cuenta comercial de Copayex.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 max-h-[280px] overflow-y-auto pr-1">
+                  {collaboratorOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setCollaborators(opt.value)}
+                      className={`text-left p-4 rounded-2xl border transition-all flex items-start gap-4 ${
+                        collaborators === opt.value
+                          ? 'border-[#073763] bg-[#073763]/5 ring-2 ring-[#073763]/20'
+                          : 'border-gray-100 bg-white hover:border-gray-200'
+                      }`}
+                    >
+                      <div className={`p-2 rounded-xl mt-0.5 ${
+                        collaborators === opt.value
+                          ? 'bg-[#073763] text-white'
+                          : 'bg-gray-50 text-gray-400'
+                      }`}>
+                        <Users size={16} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-gray-900 text-sm">{opt.label}</h4>
+                          {collaborators === opt.value && (
+                            <span className="w-5 h-5 rounded-full bg-[#073763] flex items-center justify-center text-white scale-90">
+                              <Check size={12} />
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{opt.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Action Buttons Footer */}
+          <div className="flex items-center justify-between pt-8 border-t border-gray-50 mt-8 gap-4">
+            {step > 1 ? (
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-50 transition-all"
+              >
+                <ArrowLeft size={16} />
+                <span>Atrás</span>
+              </button>
+            ) : (
+              <div />
+            )}
+
+            <button
+              onClick={handleNext}
+              disabled={step === 1 && !accountName.trim()}
+              className={`flex items-center justify-center gap-2 px-6 py-3 bg-[#073763] text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:bg-[#052544] ${
+                step === 1 && !accountName.trim() ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <span>{step === 2 && !accountLogo ? 'Omitir' : (step === 4 ? 'Finalizar' : 'Continuar')}</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const LoginView = ({ onLogin, onToggleRegister }: { onLogin: () => void; onToggleRegister: () => void }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -1600,7 +2156,10 @@ const LoginView = ({ onLogin }: { onLogin: () => void }) => {
             ¿Olvidaste tu contraseña?
           </button>
           <div className="border-t border-gray-100 pt-4">
-            <button className="text-sm text-gray-600 hover:text-gray-900 font-medium">
+            <button 
+              onClick={onToggleRegister}
+              className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+            >
               Crear cuenta
             </button>
           </div>
@@ -1612,6 +2171,7 @@ const LoginView = ({ onLogin }: { onLogin: () => void }) => {
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isRegisterPage, setIsRegisterPage] = useState(false);
   const [businessName, setBusinessName] = useState('maxStore');
   const [isEditingName, setIsEditingName] = useState(false);
   const [currentView, setCurrentView] = useState<View>('tickets');
@@ -1623,6 +2183,9 @@ export default function App() {
   const [businessLogo, setBusinessLogo] = useState<string | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [pagoFilter, setPagoFilter] = useState<'aprobado' | 'reembolsado'>('aprobado');
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<MetodoPago[]>(MOCK_METODOS);
+  const [collaboratorsCount, setCollaboratorsCount] = useState<string>('1-3');
 
   // Automatic ticket status update based on payments
   React.useEffect(() => {
@@ -1663,6 +2226,30 @@ export default function App() {
     setTimeout(() => {
       setToast(null);
     }, 3000);
+  };
+
+  const handleConnectMethod = (methodId: string) => {
+    setPaymentMethods(prev => prev.map(m => m.id === methodId ? {
+      ...m,
+      conectado: true,
+      cuenta: '#' + Math.floor(100000000 + Math.random() * 900000000).toString(),
+      titular: 'Juan Perez',
+      email: 'juanperez@mail.com'
+    } : m));
+    setSelectedMetodo(null);
+    showNotification('Cuenta vinculada con éxito');
+  };
+
+  const handleDisconnectMethod = (methodId: string) => {
+    setPaymentMethods(prev => prev.map(m => m.id === methodId ? {
+      ...m,
+      conectado: false,
+      cuenta: undefined,
+      titular: undefined,
+      email: undefined
+    } : m));
+    setSelectedMetodo(null);
+    showNotification('Cuenta desvinculada');
   };
 
   React.useEffect(() => {
@@ -1728,8 +2315,40 @@ export default function App() {
     }
   };
 
+  if (isOnboarding) {
+    return (
+      <OnboardingView 
+        initialMetodos={paymentMethods}
+        onComplete={(data) => {
+          setBusinessName(data.name);
+          setBusinessLogo(data.logo);
+          setPaymentMethods(data.paymentMethods);
+          setCollaboratorsCount(data.collaborators);
+          setIsOnboarding(false);
+          setIsLoggedIn(true);
+        }}
+      />
+    );
+  }
+
   if (!isLoggedIn) {
-    return <LoginView onLogin={() => setIsLoggedIn(true)} />;
+    if (isRegisterPage) {
+      return (
+        <RegisterView 
+          onBackToLogin={() => setIsRegisterPage(false)} 
+          onRegister={() => {
+            setIsOnboarding(true);
+            setIsRegisterPage(false);
+          }} 
+        />
+      );
+    }
+    return (
+      <LoginView 
+        onLogin={() => setIsLoggedIn(true)} 
+        onToggleRegister={() => setIsRegisterPage(true)} 
+      />
+    );
   }
 
   return (
@@ -1798,7 +2417,10 @@ export default function App() {
                   className="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden"
                 >
                   <button
-                    onClick={() => setIsLoggedIn(false)}
+                    onClick={() => {
+                      setIsLoggedIn(false);
+                      setIsProfileMenuOpen(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut size={16} />
@@ -2439,7 +3061,7 @@ export default function App() {
 
                   {configTab === 'metodos' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {MOCK_METODOS.map((metodo) => (
+                      {paymentMethods.map((metodo) => (
                         <motion.button
                           key={metodo.id}
                           whileHover={{ y: -4 }}
@@ -2529,14 +3151,20 @@ export default function App() {
                                       >
                                         Cerrar
                                       </button>
-                                      <button className="flex-1 py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold hover:bg-red-100 transition-all">
+                                      <button 
+                                        onClick={() => handleDisconnectMethod(selectedMetodo.id)}
+                                        className="flex-1 py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold hover:bg-red-100 transition-all"
+                                      >
                                         Desconectar
                                       </button>
                                     </div>
                                   </>
                                 ) : (
                                   <div className="flex flex-col gap-6 py-4">
-                                    <button className="w-full py-4 bg-copayex-blue text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                                    <button 
+                                      onClick={() => handleConnectMethod(selectedMetodo.id)}
+                                      className="w-full py-4 bg-copayex-blue text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+                                    >
                                       Vincular tu cuenta de {selectedMetodo.nombre}
                                     </button>
                                     <button 
