@@ -529,6 +529,111 @@ const Header = () => {
   );
 };
 
+interface NoPaymentMethodsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onGoToConfig: () => void;
+}
+
+const NoPaymentMethodsModal = ({ isOpen, onClose, onGoToConfig }: NoPaymentMethodsModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-3xl p-8 max-w-md w-full border border-gray-100 shadow-2xl relative overflow-hidden"
+      >
+        {/* Decorative background accent */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="flex flex-col items-center text-center mt-2">
+          {/* Warning Icon Container */}
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center border border-amber-100 text-amber-500 mb-6">
+            <Info size={28} />
+          </div>
+
+          <h3 className="text-xl font-black text-gray-900 tracking-tight mb-2">
+            Configuración Requerida
+          </h3>
+          <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+            Para poder generar un nuevo ticket de cobro, necesitás tener al menos un método de pago vinculado en tu cuenta de Copayex.
+          </p>
+
+          {/* Stepper block */}
+          <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-8 text-left space-y-4">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Paso a paso para vincular:
+            </h4>
+            
+            <div className="flex items-start gap-3">
+              <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                1
+              </span>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Dirigite a <strong className="text-gray-900">Configuración</strong> desde la barra de navegación lateral.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                2
+              </span>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Ingresá a la pestaña <strong className="text-gray-900">"Métodos de Pago"</strong>.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                3
+              </span>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Elegí tu medio de pago y presioná el botón <strong className="text-gray-900">"Vincular"</strong>.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                4
+              </span>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Completá los datos y confirmá el vínculo correspondiente.
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-gray-200 rounded-xl transition-all"
+            >
+              Cerrar
+            </button>
+            <button
+              onClick={onGoToConfig}
+              className="flex-1 py-3 text-sm font-bold text-white bg-[#073763] hover:bg-blue-900 rounded-xl transition-all shadow-lg shadow-blue-900/10"
+            >
+              Configurar Ahora
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const CreateTicketModal = ({ isOpen, onClose, onCreate }: { isOpen: boolean, onClose: () => void, onCreate: (ticket: Omit<TicketType, 'id' | 'fecha' | 'status' | 'pagado'>) => void }) => {
   const [descripcion, setDescripcion] = useState('');
   const [monto, setMonto] = useState('0');
@@ -2176,6 +2281,7 @@ export default function App() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [currentView, setCurrentView] = useState<View>('tickets');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isNoPaymentMethodsModalOpen, setIsNoPaymentMethodsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'activo' | 'finalizado' | 'anulado'>('activo');
   const [tickets, setTickets] = useState<TicketType[]>(MOCK_TICKETS);
   const [pagos, setPagos] = useState<PagoRecibido[]>(MOCK_PAGOS);
@@ -2448,7 +2554,14 @@ export default function App() {
                     <p className="text-sm text-gray-500">Gestioná y seguí todos los cobros activos desde el panel principal.</p>
                   </div>
                   <button 
-                    onClick={() => setIsCreateModalOpen(true)}
+                    onClick={() => {
+                      const hasConnectedMethod = paymentMethods.some(m => m.conectado);
+                      if (!hasConnectedMethod) {
+                        setIsNoPaymentMethodsModalOpen(true);
+                      } else {
+                        setIsCreateModalOpen(true);
+                      }
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-copayex-blue text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
                   >
                     <Plus size={18} />
@@ -3477,6 +3590,20 @@ export default function App() {
         onClose={() => setIsCreateModalOpen(false)} 
         onCreate={handleCreateTicket}
       />
+
+      <AnimatePresence>
+        {isNoPaymentMethodsModalOpen && (
+          <NoPaymentMethodsModal 
+            isOpen={isNoPaymentMethodsModalOpen}
+            onClose={() => setIsNoPaymentMethodsModalOpen(false)}
+            onGoToConfig={() => {
+              setIsNoPaymentMethodsModalOpen(false);
+              setCurrentView('configuracion');
+              setConfigTab('metodos');
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isQRModalOpen && (
